@@ -44,9 +44,9 @@ class AppUpdateService {
 
   /// 多个镜像源多重兜底，确保国内各网络环境 100% 成功检查更新
   final List<String> _updateEndpoints = [
-    'https://raw.githubusercontent.com/liwo1861a-hub/dart_simple_live/master/assets/app_version.json',
-    'https://github.iill.moe/liwo1861a-hub/dart_simple_live/master/assets/app_version.json',
-    'https://cdn.jsdelivr.net/gh/liwo1861a-hub/dart_simple_live@master/assets/app_version.json',
+    'https://raw.githubusercontent.com/liwo1861a-hub/lzlive/master/assets/app_version.json',
+    'https://github.iill.moe/liwo1861a-hub/lzlive/master/assets/app_version.json',
+    'https://cdn.jsdelivr.net/gh/liwo1861a-hub/lzlive@master/assets/app_version.json',
   ];
 
   /// 检查是否有新版本
@@ -205,7 +205,7 @@ class AppUpdateService {
                       SmartDialog.dismiss();
                       final targetUrl = info.downloadUrl.isNotEmpty
                           ? info.downloadUrl
-                          : 'https://github.com/liwo1861a-hub/dart_simple_live/releases/tag/v${info.version}';
+                          : 'https://github.com/liwo1861a-hub/lzlive/releases/tag/v${info.version}';
                       await launchUrlString(targetUrl, mode: LaunchMode.externalApplication);
                     },
                     child: const Text("立即更新"),

@@ -195,7 +195,7 @@ class HuyaSite implements LiveSite {
     }
     try {
       var result = await HttpClient.instance.getJson(
-        "https://github.iill.moe/liwo1861a-hub/dart_simple_live/master/assets/play_config.json",
+        "https://github.iill.moe/liwo1861a-hub/lzlive/master/assets/play_config.json",
         queryParameters: {
           "ts": DateTime.now().millisecondsSinceEpoch,
         },
