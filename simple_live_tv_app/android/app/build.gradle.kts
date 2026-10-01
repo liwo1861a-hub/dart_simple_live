@@ -39,12 +39,13 @@ android {
         versionName = flutter.versionName
     }
 
+    val defaultKeystore = file("purelive-release.jks")
     signingConfigs {
         create("release") {
-            keyAlias = keystoreProperties["keyAlias"] as String
-            keyPassword = keystoreProperties["keyPassword"] as String
-            storeFile = keystoreProperties["storeFile"]?.let { file(it) }
-            storePassword = keystoreProperties["storePassword"] as String
+            keyAlias = (keystoreProperties["keyAlias"] as? String) ?: "purelive"
+            keyPassword = (keystoreProperties["keyPassword"] as? String) ?: "purelive123"
+            storeFile = keystoreProperties["storeFile"]?.let { file(it) } ?: if (defaultKeystore.exists()) defaultKeystore else null
+            storePassword = (keystoreProperties["storePassword"] as? String) ?: "purelive123"
             isV1SigningEnabled = true
             isV2SigningEnabled = true
         }
