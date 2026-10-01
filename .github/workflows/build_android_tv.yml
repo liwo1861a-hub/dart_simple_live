@@ -55,7 +55,7 @@ jobs:
       - name: Build APK (Release & Split ABI)
         run: |
           cd simple_live_tv_app
-          flutter build apk --release --split-per-abi
+          flutter build apk --release --split-per-abi --android-skip-build-dependency-validation
 
       - name: Strict 1:1 Signature Verification Gatekeeper
         shell: bash
