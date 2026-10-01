@@ -242,6 +242,51 @@ class LiveRoomController extends PlayerController with WidgetsBindingObserver {
     Log.d("播放链接\r\n：${playUrls[currentLineIndex]}");
   }
 
+  bool isCheckingStatus = false;
+  int autoRefreshRetryCount = 0;
+
+  /// 异步智能核验主播真实开播状态，并自动刷新拉取新 Token 直播流（防误报未开播看门狗）
+  Future<void> checkLiveStatusAndRefresh() async {
+    if (isCheckingStatus) return;
+    isCheckingStatus = true;
+    try {
+      Log.d("TV端所有线路连接断开，正在向平台重新核验主播真实状态并拉取最新直播流...");
+      SmartDialog.showToast("正在重新连接直播间...");
+
+      await Future.delayed(const Duration(seconds: 1));
+      var newDetail = await site.liveSite.getRoomDetail(roomId: roomId);
+      detail.value = newDetail;
+
+      bool isStillLive = newDetail.status || newDetail.isRecord;
+      if (!isStillLive) {
+        liveStatus.value = false;
+        errorMsg.value = "主播已下播";
+        SmartDialog.showToast("当前主播已下播");
+        Log.d("平台确认：主播已下播");
+      } else {
+        liveStatus.value = true;
+        errorMsg.value = "";
+        mediaErrorRetryCount = 0;
+        autoRefreshRetryCount = 0;
+        SmartDialog.showToast("主播正在直播，正在加载全新直播流...");
+        Log.d("平台确认：主播正在直播，重新拉取最新流直链续播");
+        getPlayQualites();
+      }
+    } catch (e) {
+      Log.logPrint(e);
+      if (autoRefreshRetryCount < 3) {
+        autoRefreshRetryCount += 1;
+        await Future.delayed(const Duration(seconds: 2));
+        isCheckingStatus = false;
+        checkLiveStatusAndRefresh();
+        return;
+      }
+      errorMsg.value = "直播间连接断开，点击重试";
+    } finally {
+      isCheckingStatus = false;
+    }
+  }
+
   @override
   void mediaEnd() async {
     if (mediaErrorRetryCount < 2) {
@@ -256,14 +301,11 @@ class LiveRoomController extends PlayerController with WidgetsBindingObserver {
       return;
     }
 
-    Log.d("播放结束");
-    // 遍历线路，如果全部链接都断开就是直播结束了
+    Log.d("播放结束，遍历线路");
     if (playUrls.length - 1 == currentLineIndex) {
-      liveStatus.value = false;
+      checkLiveStatusAndRefresh();
     } else {
       changePlayLine(currentLineIndex + 1);
-
-      //setPlayer();
     }
   }
 
@@ -283,11 +325,9 @@ class LiveRoomController extends PlayerController with WidgetsBindingObserver {
     }
 
     if (playUrls.length - 1 == currentLineIndex) {
-      errorMsg.value = "播放失败";
-      SmartDialog.showToast("播放失败:$error");
+      errorMsg.value = "正在重新连接直播间...";
+      checkLiveStatusAndRefresh();
     } else {
-      //currentLineIndex += 1;
-      //setPlayer();
       changePlayLine(currentLineIndex + 1);
     }
   }

@@ -12,6 +12,7 @@ import 'package:simple_live_app/modules/home/home_page.dart';
 import 'package:simple_live_app/modules/follow_user/follow_user_controller.dart';
 import 'package:simple_live_app/modules/follow_user/follow_user_page.dart';
 import 'package:simple_live_app/modules/mine/mine_page.dart';
+import 'package:simple_live_app/services/app_update_service.dart';
 
 class IndexedController extends GetxController {
   RxList<HomePageItem> items = RxList<HomePageItem>([]);
@@ -57,6 +58,9 @@ class IndexedController extends GetxController {
   @override
   void onInit() {
     Future.delayed(Duration.zero, showFirstRun);
+    Future.delayed(const Duration(seconds: 3), () {
+      AppUpdateService.instance.checkUpdate(showToastOnLatest: false);
+    });
     items.value = AppSettingsController.instance.homeSort
         .map((key) => Constant.allHomePages[key]!)
         .toList();

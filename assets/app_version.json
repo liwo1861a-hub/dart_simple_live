@@ -1,7 +1,7 @@
 {
-  "version": "1.11.1",
-  "version_num": 11101,
-  "version_desc": "- 版本更新",
+  "version": "1.11.5",
+  "version_num": 11105,
+  "version_desc": "- 优化底层解码与缓冲参数，大幅消除边缘CDN卡顿\n- 新增直播断流智能重连看门狗，避免误报未开播\n- 新增应用内软件在线检查更新功能",
   "prerelease": false,
   "download_url": "https://github.com/liwo1861a-hub/dart_simple_live/releases"
 }

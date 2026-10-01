@@ -52,6 +52,20 @@ mixin PlayerMixin {
     if(Platform.isAndroid){
       await pp.setProperty('force-seekable', 'yes');
     }
+    // 底层 mpv 缓冲与网络抗抖动优化，彻底防止边缘 CDN 丢包疯狂卡顿
+    try {
+      await pp.setProperty('demuxer-max-bytes', '67108864'); // 64MB 解复用缓冲
+      await pp.setProperty('demuxer-readahead-secs', '6');   // 预读 6 秒
+      await pp.setProperty('demuxer-max-back-bytes', '16777216'); // 16MB 回退缓存
+      await pp.setProperty('network-timeout', '10'); // 10秒网络超时
+      await pp.setProperty('stream-buffer-size', '524288'); // 512KB 流缓冲
+      await pp.setProperty('cache', 'yes');
+      await pp.setProperty('cache-secs', '10');
+      await pp.setProperty('tls-verify', 'no');
+      await pp.setProperty('ytdl', 'no');
+    } catch (e) {
+      Log.logPrint(e);
+    }
   }
 
   /// 视频控制器

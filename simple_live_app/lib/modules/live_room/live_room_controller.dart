@@ -441,6 +441,57 @@ class LiveRoomController extends PlayerController with WidgetsBindingObserver {
     await player.jump(currentLineIndex);
   }
 
+  bool isCheckingStatus = false;
+  int autoRefreshRetryCount = 0;
+
+  /// 异步智能核验主播真实开播状态，并自动刷新拉取新 Token 直播流（防误报未开播看门狗）
+  Future<void> checkLiveStatusAndRefresh() async {
+    if (isCheckingStatus) return;
+    isCheckingStatus = true;
+    try {
+      Log.d("所有临时线路连接断开，正在向平台重新核验主播真实状态并拉取最新直播流...");
+      addSysMsg("正在重新连接直播间...");
+
+      // 延迟 1 秒防频繁请求
+      await Future.delayed(const Duration(seconds: 1));
+      var newDetail = await site.liveSite.getRoomDetail(roomId: roomId);
+      detail.value = newDetail;
+
+      bool isStillLive = newDetail.status || newDetail.isRecord;
+      if (!isStillLive) {
+        // 真正从平台官方 API 确认已下播
+        liveStatus.value = false;
+        errorMsg.value = "主播已下播";
+        addSysMsg("当前主播已下播");
+        Log.d("平台确认：主播已下播");
+      } else {
+        // 主播依然在直播！之前的流地址由于 CDN Token 过期或节点网络抖动断流
+        liveStatus.value = true;
+        errorMsg.value = "";
+        mediaErrorRetryCount = 0;
+        autoRefreshRetryCount = 0;
+        addSysMsg("主播正在直播，正在加载全新直播流...");
+        Log.d("平台确认：主播正在直播，重新拉取最新流直链续播");
+        // 重新获取最新清晰度并换取全新的推流直链
+        getPlayQualites();
+      }
+    } catch (e) {
+      Log.logPrint(e);
+      // 网络偶发抖动时，重试 3 次，绝对不提前误报下播
+      if (autoRefreshRetryCount < 3) {
+        autoRefreshRetryCount += 1;
+        Log.d("网络抖动导致状态核验异常，将在 2 秒后进行第 $autoRefreshRetryCount 次重连");
+        await Future.delayed(const Duration(seconds: 2));
+        isCheckingStatus = false;
+        checkLiveStatusAndRefresh();
+        return;
+      }
+      errorMsg.value = "直播间连接超时，点击重试";
+    } finally {
+      isCheckingStatus = false;
+    }
+  }
+
   @override
   void mediaEnd() async {
     super.mediaEnd();
@@ -456,14 +507,12 @@ class LiveRoomController extends PlayerController with WidgetsBindingObserver {
       return;
     }
 
-    Log.d("播放结束");
-    // 遍历线路，如果全部链接都断开就是直播结束了
+    Log.d("播放结束，遍历线路重试");
+    // 遍历线路，如果所有旧链接都断开，不直接误判未开播，而是向平台核验最新状态拉新流
     if (playUrls.length - 1 == currentLineIndex) {
-      liveStatus.value = false;
+      checkLiveStatusAndRefresh();
     } else {
       changePlayLine(currentLineIndex + 1);
-
-      //setPlayer();
     }
   }
 
@@ -484,11 +533,9 @@ class LiveRoomController extends PlayerController with WidgetsBindingObserver {
     }
 
     if (playUrls.length - 1 == currentLineIndex) {
-      errorMsg.value = "播放失败";
-      SmartDialog.showToast("播放失败:$error");
+      errorMsg.value = "正在重新连接直播间...";
+      checkLiveStatusAndRefresh();
     } else {
-      //currentLineIndex += 1;
-      //setPlayer();
       changePlayLine(currentLineIndex + 1);
     }
   }

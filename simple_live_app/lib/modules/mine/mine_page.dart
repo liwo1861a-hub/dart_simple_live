@@ -7,6 +7,7 @@ import 'package:simple_live_app/app/app_style.dart';
 import 'package:simple_live_app/app/log.dart';
 import 'package:simple_live_app/app/utils.dart';
 import 'package:simple_live_app/routes/route_path.dart';
+import 'package:simple_live_app/services/app_update_service.dart';
 import 'package:simple_live_app/services/signalr_service.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -233,6 +234,18 @@ class MinePage extends StatelessWidget {
             _buildCard(
               context,
               children: [
+                ListTile(
+                  leading: const Icon(Remix.refresh_line),
+                  title: const Text("检查更新"),
+                  subtitle: const Text("查看最新版本与在线升级"),
+                  trailing: const Icon(
+                    Icons.chevron_right,
+                    color: Colors.grey,
+                  ),
+                  onTap: () {
+                    AppUpdateService.instance.checkUpdate(showToastOnLatest: true);
+                  },
+                ),
                 const ListTile(
                   leading: Icon(Remix.error_warning_line),
                   title: Text("免责声明"),

@@ -274,10 +274,21 @@ class LiveRoomPage extends GetView<LiveRoomController> {
         Obx(
           () => Visibility(
             visible: !controller.liveStatus.value,
-            child: const Center(
-              child: Text(
-                "未开播",
-                style: TextStyle(fontSize: 16, color: Colors.white),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    "未开播",
+                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton.icon(
+                    onPressed: () => controller.checkLiveStatusAndRefresh(),
+                    icon: const Icon(Icons.refresh, color: Colors.white70, size: 16),
+                    label: const Text("刷新重试", style: TextStyle(color: Colors.white70)),
+                  ),
+                ],
               ),
             ),
           ),
