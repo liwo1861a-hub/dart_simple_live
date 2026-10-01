@@ -30,7 +30,8 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.38.x"
+          channel: stable
+          flutter-version: "3.47.1"
           cache: true
 
       - name: Configure Android Fixed Signing Key
